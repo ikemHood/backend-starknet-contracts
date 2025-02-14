@@ -13,7 +13,7 @@ This repository contains the backend for developing and deploying smart contract
 - Scripts for automating deployments and contract management.
 
 ---
-##Contributing
+## Contributing
 Contributions are welcome! Please follow the steps below:
 
 Fork the repository.
@@ -42,9 +42,11 @@ To get started, ensure you have the following installed:
    cd cairo-backend
 
 2. usage 
-2.1 Compile a contract 
+## Compile a contract 
 starknet-compile path/to/contract.cairo --output path/to/output.json
-2.2 Deploy a contract
+## Deploy a contract
 starknet deploy --contract path/to/output.json --network testnet
 3. Test contracts 
 pytest tests/
+## IMPORTANT!!
+Each contract, connection or backend contributing must come with their own test to check up funcionality!
