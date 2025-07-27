@@ -112,7 +112,88 @@ pub mod BettingSystem {
     #[abi(embed_v0)]
     pub impl BettingSystemImpl of IBettingSystem<ContractState> {
        
+        // Create a new bet pool
+        fn create_bet_pool(
+            ref self: ContractState,
+            tournament_id: u64,
+            match_id: u64,
+            name: felt252,
+            description: ByteArray,
+            min_bet: u256,
+            max_bet: u256,
+            closes_at: u64,
+            category: felt252,
+            outcomes: Array<felt252>
+        ) -> u64 {
+            assert(min_bet <= max_bet, 'INVALID_BET_LIMITS');
+            assert(!outcomes.is_empty(), 'NO_OUTCOMES_PROVIDED');
 
+            let current_timestamp = get_block_timestamp();
+            assert(closes_at > current_timestamp, 'POOL_CLOSES_IN_PAST');
+
+
+            let pool_id = self.total_pools.read() + 1;
+            let creator = get_caller_address();
+            
+            // Create new BetPool instance
+            let new_pool = BetPool {
+                pool_id,
+                tournament_id,
+                match_id,
+                name,
+                description,
+                total_amount: 0,
+                min_bet,
+                max_bet,
+                created_at: current_timestamp,
+                closes_at,
+                is_open: true,
+                creator,
+                total_bets: 0,
+                category
+            };
+            
+            // Store the new pool
+            self.pools.write(pool_id, new_pool);
+            
+            // Update total pools counter
+            self.total_pools.write(pool_id);
+            
+            // Add to active pools list
+            self.active_pool_ids.push(pool_id);
+            
+            // Store outcomes for the pool
+
+            let mut outcomes_vec_entry = self.outcomes_per_pool.entry(pool_id);
+
+            // Iterate over the elements of the memory array 'outcomes'
+            let outcomes_len = outcomes.len();
+            let mut i = 0;
+            loop {
+                if i == outcomes_len {
+                    break;
+                }
+                let outcome_element = outcomes.at(i);
+                outcomes_vec_entry.push(*outcome_element);
+                i += 1;
+            };
+            
+            // Emit event
+            self.emit(
+                Event::BetPoolCreated(
+                    BetPoolCreated {
+                        pool_id,
+                        tournament_id,
+                        match_id,
+                        name,
+                        closes_at,
+                        creator,
+                    }
+                )
+            );
+            
+            pool_id
+        }
         
        
     }
