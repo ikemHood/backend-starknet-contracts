@@ -19,7 +19,9 @@ pub trait IBettingSystem<TContractState> {
         category: felt252,
         outcomes: Array<felt252>
     ) -> u64;
- 
+
+    fn get_total_pools(self: @TContractState) -> u64;
+    fn get_pool_by_id(self: @TContractState, pool_id: u64) -> BetPool;
 }
 
 // ========================================
@@ -193,6 +195,18 @@ pub mod BettingSystem {
             );
             
             pool_id
+        }
+
+        fn get_total_pools(self: @ContractState) -> u64 {
+            self.total_pools.read()
+        }
+
+        fn get_pool_by_id(self: @ContractState, pool_id: u64) -> BetPool {
+            assert(pool_id > 0, 'INVALID_POOL_ID');
+
+            // Retrieve the pool from storage
+            let pool = self.pools.read(pool_id);
+            pool
         }
         
        
