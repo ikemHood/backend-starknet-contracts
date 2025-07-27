@@ -37,7 +37,7 @@ fn test_create_bet_pool_success() {
     let tournament_id = 1_u64;
     let match_id = 101_u64;
     let name = 'FootballMatch';
-    let mut description: ByteArray = "World Cup Final";
+    let description: ByteArray = "World Cup Final";
     let min_bet = 10;
     let max_bet = 200;
     let closes_at = current_timestamp + 100_u64; // Must be in the future
@@ -85,111 +85,134 @@ fn test_create_bet_pool_success() {
     spy.assert_emitted(@array![(dispatcher.contract_address, expected_event)]);
 }
 
-// #[test]
-// #[should_panic(expected: "INVALID_BET_LIMITS")] // Assert panic message 
-//     let dispatcher = deploy_contract();
-//     let caller_address = contract_address_const::<'test_creator_invalid_limits'>();
-//     start_cheat_caller_address(dispatcher.contract_address, caller_address);
-//     let current_timestamp = 1000_u64;
-//     start_cheat_block_timestamp(dispatcher.contract_address, current_timestamp);
+#[test]
+#[should_panic(expected: 'CALLER_NOT_OWNER')]
+fn test_create_bet_pool_not_owner() {
+    let dispatcher = deploy_contract();
+    let caller_address = contract_address_const::<'non_owner'>();
+    start_cheat_caller_address(dispatcher.contract_address, caller_address);
+    let current_timestamp = 1000_u64;
+    start_cheat_block_timestamp(dispatcher.contract_address, current_timestamp);
 
-//     let tournament_id = 1_u64;
-//     let match_id = 101_u64;
-//     let name = 'FootballMatch';
-//     let mut description = ByteArrayTrait::new();
-//     description.append('Invalid Bet Limits Test');
-//     let min_bet = U256 { low: 100, high: 0 }; // min_bet > max_bet, will panic
-//     let max_bet = U256 { low: 10, high: 0 };
-//     let closes_at = current_timestamp + 100_u64;
-//     let category = 'Sports';
-//     let mut outcomes = array![];
-//     outcomes.append('OutcomeA');
+    let tournament_id = 1_u64;
+    let match_id = 101_u64;
+    let name = 'FootballMatch';
+    let description: ByteArray = "Invalid Bet Limits Test";
+    let min_bet = 50;
+    let max_bet = 50;
+    let closes_at = current_timestamp + 100_u64;
+    let category = 'Sports';
+    let mut outcomes = array![];
+    outcomes.append('OutcomeA');
 
-//     dispatcher.create_bet_pool(
-//         tournament_id,
-//         match_id,
-//         name,
-//         description,
-//         min_bet,
-//         max_bet,
-//         closes_at,
-//         category,
-//         outcomes
-//     );
+    dispatcher.create_bet_pool(
+        tournament_id,
+        match_id,
+        name,
+        description,
+        min_bet,
+        max_bet,
+        closes_at,
+        category,
+        outcomes
+    );
+}
 
-//     stop_cheat_caller_address(dispatcher.contract_address);
-//     stop_cheat_block_timestamp(dispatcher.contract_address);
-// }
 
-// #[test]
-// #[should_panic(expected: "NO_OUTCOMES_PROVIDED")] // Assert panic message 
-// fn test_create_bet_pool_no_outcomes() {
-//     let dispatcher = deploy_contract();
-//     let caller_address = contract_address_const::<'test_creator_no_outcomes'>();
-//     start_cheat_caller_address(dispatcher.contract_address, caller_address);
-//     let current_timestamp = 1000_u64;
-//     start_cheat_block_timestamp(dispatcher.contract_address, current_timestamp);
+#[test]
+#[should_panic(expected: 'INVALID_BET_LIMITS')]
+fn test_create_bet_pool_invalid_bet_limits() {
+    let dispatcher = deploy_contract();
+    let caller_address = contract_address_const::<'owner'>();
+    start_cheat_caller_address(dispatcher.contract_address, caller_address);
+    let current_timestamp = 1000_u64;
+    start_cheat_block_timestamp(dispatcher.contract_address, current_timestamp);
 
-//     let tournament_id = 1_u64;
-//     let match_id = 101_u64;
-//     let name = 'FootballMatch';
-//     let mut description = ByteArrayTrait::new();
-//     description.append('No Outcomes Test');
-//     let min_bet = U256 { low: 10, high: 0 };
-//     let max_bet = U256 { low: 100, high: 0 };
-//     let closes_at = current_timestamp + 100_u64;
-//     let category = 'Sports';
-//     let outcomes = array![]; // Empty outcomes, will panic
+    let tournament_id = 1_u64;
+    let match_id = 101_u64;
+    let name = 'FootballMatch';
+    let description: ByteArray = "Invalid Bet Limits Test";
+    let min_bet = 50;
+    let max_bet = 50;
+    let closes_at = current_timestamp + 100_u64;
+    let category = 'Sports';
+    let mut outcomes = array![];
+    outcomes.append('OutcomeA');
 
-//     dispatcher.create_bet_pool(
-//         tournament_id,
-//         match_id,
-//         name,
-//         description,
-//         min_bet,
-//         max_bet,
-//         closes_at,
-//         category,
-//         outcomes
-//     );
+    dispatcher.create_bet_pool(
+        tournament_id,
+        match_id,
+        name,
+        description,
+        min_bet,
+        max_bet,
+        closes_at,
+        category,
+        outcomes
+    );
+}
 
-//     stop_cheat_caller_address(dispatcher.contract_address);
-//     stop_cheat_block_timestamp(dispatcher.contract_address);
-// }
+#[test]
+#[should_panic(expected: 'NO_OUTCOMES_PROVIDED')] 
+fn test_create_bet_pool_no_outcomes() {
+    let dispatcher = deploy_contract();
+    let caller_address = contract_address_const::<'owner'>();
+    start_cheat_caller_address(dispatcher.contract_address, caller_address);
+    let current_timestamp = 1000_u64;
+    start_cheat_block_timestamp(dispatcher.contract_address, current_timestamp);
 
-// #[test]
-// #[should_panic(expected: "POOL_CLOSES_IN_PAST")] // Assert panic message 
-// fn test_create_bet_pool_closes_in_past() {
-//     let dispatcher = deploy_contract();
-//     let caller_address = contract_address_const::<'test_creator_closes_past'>();
-//     start_cheat_caller_address(dispatcher.contract_address, caller_address);
-//     let current_timestamp = 1000_u64;
-//     start_cheat_block_timestamp(dispatcher.contract_address, current_timestamp);
+    let tournament_id = 1_u64;
+    let match_id = 101_u64;
+    let name = 'FootballMatch';
+    let mut description = "Banditss";
+    let min_bet = 10;
+    let max_bet = 110;
+    let closes_at = current_timestamp + 100_u64;
+    let category = 'Sports';
+    let outcomes = array![];
 
-//     let tournament_id = 1_u64;
-//     let match_id = 101_u64;
-//     let name = 'FootballMatch';
-//     let mut description = ByteArrayTrait::new();
-//     description.append('Closes In Past Test');
-//     let min_bet = U256 { low: 10, high: 0 };
-//     let max_bet = U256 { low: 100, high: 0 };
-//     let closes_at = current_timestamp - 1_u64; // In the past, will panic
-//     let category = 'Sports';
-//     let mut outcomes = array![];
-//     outcomes.append('OutcomeA');
+    dispatcher.create_bet_pool(
+        tournament_id,
+        match_id,
+        name,
+        description,
+        min_bet,
+        max_bet,
+        closes_at,
+        category,
+        outcomes
+    );
+}
 
-//     dispatcher.create_bet_pool(
-//         tournament_id,
-//         match_id,
-//         name,
-//         description,
-//         min_bet,
-//         max_bet,
-//         closes_at,
-//         category,
-//         outcomes
-//     );
+#[test]
+#[should_panic(expected: 'POOL_CLOSES_IN_PAST')]
+fn test_create_bet_pool_closes_in_past() {
+    let dispatcher = deploy_contract();
+    let caller_address = contract_address_const::<'owner'>();
+    start_cheat_caller_address(dispatcher.contract_address, caller_address);
+    let current_timestamp = 1000_u64;
+    start_cheat_block_timestamp(dispatcher.contract_address, current_timestamp);
 
-//     stop_cheat_caller_address(dispatcher.contract_address);
-//     stop_cheat_block_timestamp(dispatcher.contract_address);
-// }
+    let tournament_id = 1_u64;
+    let match_id = 101_u64;
+    let name = 'FootballMatch';
+    let mut description: ByteArray = "Closes In Past Test";
+    let min_bet = 10;
+    let max_bet = 250;
+    let closes_at = current_timestamp - 1_u64;
+    let category = 'Sports';
+    let mut outcomes = array![];
+    outcomes.append('OutcomeA');
+
+    dispatcher.create_bet_pool(
+        tournament_id,
+        match_id,
+        name,
+        description,
+        min_bet,
+        max_bet,
+        closes_at,
+        category,
+        outcomes
+    );
+}
