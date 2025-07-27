@@ -9,5 +9,5 @@ pub mod modules {
 
 #[cfg(test)]
 mod tests {
-    // mod ;
+    mod test_betting;
 }
