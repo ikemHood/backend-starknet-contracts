@@ -6,7 +6,6 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IBettingSystem<TContractState> {
-    
     fn create_bet_pool(
         ref self: TContractState,
         tournament_id: u64,
@@ -17,7 +16,7 @@ pub trait IBettingSystem<TContractState> {
         max_bet: u256,
         closes_at: u64,
         category: felt252,
-        outcomes: Array<felt252>
+        outcomes: Array<felt252>,
     ) -> u64;
 
     fn get_total_pools(self: @TContractState) -> u64;
@@ -30,7 +29,7 @@ pub trait IBettingSystem<TContractState> {
 // ========================================
 
 #[derive(Drop, Serde, starknet::Store)]
- struct BetPool {
+struct BetPool {
     pub pool_id: u64,
     pub tournament_id: u64,
     pub match_id: u64,
@@ -69,29 +68,24 @@ pub struct PoolStatus {
 
 #[starknet::contract]
 pub mod BettingSystem {
-    use super::{BetPool, PoolStatus, IBettingSystem};
-    use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
-    use starknet::storage::*;
     use core::num::traits::Zero;
+    use starknet::storage::*;
+    use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
+    use super::{BetPool, IBettingSystem, PoolStatus};
 
     // Contract storage
     #[storage]
     pub struct Storage {
         // Total pools counter
         total_pools: u64,
-        
         // Pools mapping by ID
         pools: Map<u64, BetPool>,
-        
         // Status mapping by ID
         pool_status: Map<u64, PoolStatus>,
-        
         // Active pools list for efficient querying
         active_pool_ids: Vec<u64>,
-
         // Stores outcomes for each pool
         outcomes_per_pool: Map<u64, Vec<felt252>>,
-                
         // Owner of the contract (new)
         owner: ContractAddress,
     }
@@ -124,7 +118,6 @@ pub mod BettingSystem {
 
     #[abi(embed_v0)]
     pub impl BettingSystemImpl of IBettingSystem<ContractState> {
-       
         // Create a new bet pool
         fn create_bet_pool(
             ref self: ContractState,
@@ -136,19 +129,18 @@ pub mod BettingSystem {
             max_bet: u256,
             closes_at: u64,
             category: felt252,
-            outcomes: Array<felt252>
+            outcomes: Array<felt252>,
         ) -> u64 {
             self._assert_only_owner();
-            assert(min_bet <= max_bet, 'INVALID_BET_LIMITS');
+            assert(min_bet < max_bet, 'INVALID_BET_LIMITS');
             assert(!outcomes.is_empty(), 'NO_OUTCOMES_PROVIDED');
 
             let current_timestamp = get_block_timestamp();
             assert(closes_at > current_timestamp, 'POOL_CLOSES_IN_PAST');
 
-
             let pool_id = self.total_pools.read() + 1;
             let creator = get_caller_address();
-            
+
             // Create new BetPool instance
             let new_pool = BetPool {
                 pool_id,
@@ -164,18 +156,18 @@ pub mod BettingSystem {
                 is_open: true,
                 creator,
                 total_bets: 0,
-                category
+                category,
             };
-            
+
             // Store the new pool
             self.pools.write(pool_id, new_pool);
-            
+
             // Update total pools counter
             self.total_pools.write(pool_id);
-            
+
             // Add to active pools list
             self.active_pool_ids.push(pool_id);
-            
+
             // Store outcomes for the pool
 
             let mut outcomes_vec_entry = self.outcomes_per_pool.entry(pool_id);
@@ -190,22 +182,18 @@ pub mod BettingSystem {
                 let outcome_element = outcomes.at(i);
                 outcomes_vec_entry.push(*outcome_element);
                 i += 1;
-            };
-            
+            }
+
             // Emit event
-            self.emit(
-                Event::BetPoolCreated(
-                    BetPoolCreated {
-                        pool_id,
-                        tournament_id,
-                        match_id,
-                        name,
-                        closes_at,
-                        creator,
-                    }
-                )
-            );
-            
+            self
+                .emit(
+                    Event::BetPoolCreated(
+                        BetPoolCreated {
+                            pool_id, tournament_id, match_id, name, closes_at, creator,
+                        },
+                    ),
+                );
+
             pool_id
         }
 
@@ -224,7 +212,6 @@ pub mod BettingSystem {
         fn get_owner(self: @ContractState) -> ContractAddress {
             self.owner.read()
         }
-       
     }
 
     #[generate_trait]
@@ -235,5 +222,4 @@ pub mod BettingSystem {
             assert(caller == owner, 'CALLER_NOT_OWNER');
         }
     }
-    
-} 
+}

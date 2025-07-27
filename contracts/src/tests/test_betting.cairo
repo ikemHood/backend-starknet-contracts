@@ -1,10 +1,13 @@
+use snforge_std::{
+    ContractClassTrait, DeclareResultTrait, EventSpyAssertionsTrait, declare, load, spy_events,
+    start_cheat_block_timestamp, start_cheat_caller_address, stop_cheat_block_timestamp,
+    stop_cheat_caller_address,
+};
 use starknet::{ContractAddress, contract_address_const};
-use snforge_std::{declare, DeclareResultTrait, ContractClassTrait, EventSpyAssertionsTrait,
-     spy_events, start_cheat_block_timestamp, stop_cheat_block_timestamp, start_cheat_caller_address,
-    stop_cheat_caller_address, load};
-use crate::modules::betting::BettingSystem::{IBettingSystemDispatcher, BettingSystem, BettingSystem::BetPoolCreated, 
-    IBettingSystem, IBettingSystemDispatcherTrait};
-
+use crate::modules::betting::BettingSystem::BettingSystem::BetPoolCreated;
+use crate::modules::betting::BettingSystem::{
+    BettingSystem, IBettingSystem, IBettingSystemDispatcher, IBettingSystemDispatcherTrait,
+};
 
 
 // Helper function to deploy the contract
@@ -13,10 +16,7 @@ fn deploy_contract() -> IBettingSystemDispatcher {
     let contract = declare("BettingSystem").unwrap();
     let owner_address: ContractAddress = contract_address_const::<'owner'>();
     let args = array![owner_address.into()];
-    let (contract_address, _err) = contract
-        .contract_class()
-        .deploy(@args)
-        .unwrap();
+    let (contract_address, _err) = contract.contract_class().deploy(@args).unwrap();
     IBettingSystemDispatcher { contract_address }
 }
 
@@ -29,7 +29,7 @@ fn test_create_bet_pool_success() {
     let caller_address = contract_address_const::<'owner'>();
     start_cheat_caller_address(dispatcher.contract_address, caller_address);
 
-    // Setup block timestamp cheat to control `closes_at` assertion 
+    // Setup block timestamp cheat to control `closes_at` assertion
     let current_timestamp = 1000_u64;
     start_cheat_block_timestamp(dispatcher.contract_address, current_timestamp);
 
@@ -52,35 +52,31 @@ fn test_create_bet_pool_success() {
     assert(initial_total_pools == 0, 'Initial should be 0');
 
     // Call the function to create a new bet pool
-    let pool_id = dispatcher.create_bet_pool(
-        tournament_id,
-        match_id,
-        name,
-        description,
-        min_bet,
-        max_bet,
-        closes_at,
-        category,
-        outcomes
-    );
+    let pool_id = dispatcher
+        .create_bet_pool(
+            tournament_id,
+            match_id,
+            name,
+            description,
+            min_bet,
+            max_bet,
+            closes_at,
+            category,
+            outcomes,
+        );
 
     // Assert the returned pool_id is correct (first pool should be 1)
     assert(pool_id == 1, 'Pool ID should be 1');
 
-    // Verify total_pools counter increased 
+    // Verify total_pools counter increased
     let total_pools_after = dispatcher.get_total_pools();
     assert_eq!(total_pools_after, 1, "total_pools should be 1 now");
 
-    // Verify event emission 
+    // Verify event emission
     let expected_event = BettingSystem::Event::BetPoolCreated(
         BetPoolCreated {
-            pool_id: 1,
-            tournament_id,
-            match_id,
-            name,
-            closes_at,
-            creator: caller_address,
-        }
+            pool_id: 1, tournament_id, match_id, name, closes_at, creator: caller_address,
+        },
     );
     spy.assert_emitted(@array![(dispatcher.contract_address, expected_event)]);
 }
@@ -105,17 +101,18 @@ fn test_create_bet_pool_not_owner() {
     let mut outcomes = array![];
     outcomes.append('OutcomeA');
 
-    dispatcher.create_bet_pool(
-        tournament_id,
-        match_id,
-        name,
-        description,
-        min_bet,
-        max_bet,
-        closes_at,
-        category,
-        outcomes
-    );
+    dispatcher
+        .create_bet_pool(
+            tournament_id,
+            match_id,
+            name,
+            description,
+            min_bet,
+            max_bet,
+            closes_at,
+            category,
+            outcomes,
+        );
 }
 
 
@@ -139,21 +136,22 @@ fn test_create_bet_pool_invalid_bet_limits() {
     let mut outcomes = array![];
     outcomes.append('OutcomeA');
 
-    dispatcher.create_bet_pool(
-        tournament_id,
-        match_id,
-        name,
-        description,
-        min_bet,
-        max_bet,
-        closes_at,
-        category,
-        outcomes
-    );
+    dispatcher
+        .create_bet_pool(
+            tournament_id,
+            match_id,
+            name,
+            description,
+            min_bet,
+            max_bet,
+            closes_at,
+            category,
+            outcomes,
+        );
 }
 
 #[test]
-#[should_panic(expected: 'NO_OUTCOMES_PROVIDED')] 
+#[should_panic(expected: 'NO_OUTCOMES_PROVIDED')]
 fn test_create_bet_pool_no_outcomes() {
     let dispatcher = deploy_contract();
     let caller_address = contract_address_const::<'owner'>();
@@ -171,17 +169,18 @@ fn test_create_bet_pool_no_outcomes() {
     let category = 'Sports';
     let outcomes = array![];
 
-    dispatcher.create_bet_pool(
-        tournament_id,
-        match_id,
-        name,
-        description,
-        min_bet,
-        max_bet,
-        closes_at,
-        category,
-        outcomes
-    );
+    dispatcher
+        .create_bet_pool(
+            tournament_id,
+            match_id,
+            name,
+            description,
+            min_bet,
+            max_bet,
+            closes_at,
+            category,
+            outcomes,
+        );
 }
 
 #[test]
@@ -204,15 +203,16 @@ fn test_create_bet_pool_closes_in_past() {
     let mut outcomes = array![];
     outcomes.append('OutcomeA');
 
-    dispatcher.create_bet_pool(
-        tournament_id,
-        match_id,
-        name,
-        description,
-        min_bet,
-        max_bet,
-        closes_at,
-        category,
-        outcomes
-    );
+    dispatcher
+        .create_bet_pool(
+            tournament_id,
+            match_id,
+            name,
+            description,
+            min_bet,
+            max_bet,
+            closes_at,
+            category,
+            outcomes,
+        );
 }

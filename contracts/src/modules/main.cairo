@@ -1,1 +1,1 @@
-# Punto de entrada del contrato
+// # Punto de entrada del contrato
