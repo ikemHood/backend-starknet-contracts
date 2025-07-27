@@ -22,6 +22,7 @@ pub trait IBettingSystem<TContractState> {
 
     fn get_total_pools(self: @TContractState) -> u64;
     fn get_pool_by_id(self: @TContractState, pool_id: u64) -> BetPool;
+    fn get_owner(self: @TContractState) -> ContractAddress;
 }
 
 // ========================================
@@ -71,6 +72,7 @@ pub mod BettingSystem {
     use super::{BetPool, PoolStatus, IBettingSystem};
     use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
     use starknet::storage::*;
+    use core::num::traits::Zero;
 
     // Contract storage
     #[storage]
@@ -89,6 +91,9 @@ pub mod BettingSystem {
 
         // Stores outcomes for each pool
         outcomes_per_pool: Map<u64, Vec<felt252>>,
+                
+        // Owner of the contract (new)
+        owner: ContractAddress,
     }
 
     #[event]
@@ -110,6 +115,12 @@ pub mod BettingSystem {
         pub creator: ContractAddress,
     }
 
+    #[constructor]
+    fn constructor(ref self: ContractState, initial_owner: ContractAddress) {
+        assert(!initial_owner.is_zero(), 'INVALID_ADDRESS');
+        self.owner.write(initial_owner);
+    }
+
 
     #[abi(embed_v0)]
     pub impl BettingSystemImpl of IBettingSystem<ContractState> {
@@ -127,6 +138,7 @@ pub mod BettingSystem {
             category: felt252,
             outcomes: Array<felt252>
         ) -> u64 {
+            self._assert_only_owner();
             assert(min_bet <= max_bet, 'INVALID_BET_LIMITS');
             assert(!outcomes.is_empty(), 'NO_OUTCOMES_PROVIDED');
 
@@ -208,8 +220,20 @@ pub mod BettingSystem {
             let pool = self.pools.read(pool_id);
             pool
         }
-        
+
+        fn get_owner(self: @ContractState) -> ContractAddress {
+            self.owner.read()
+        }
        
+    }
+
+    #[generate_trait]
+    impl InternalFunctions of InternalFunctionsTrait {
+        fn _assert_only_owner(self: @ContractState) {
+            let owner = self.owner.read();
+            let caller = get_caller_address();
+            assert(caller == owner, 'CALLER_NOT_OWNER');
+        }
     }
     
 } 
