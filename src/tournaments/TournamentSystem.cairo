@@ -1,7 +1,8 @@
-use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
+use dojo::world::IWorldDispatcher;
 use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
-use super::{Tournament, TournamentOrganizer, Match, MatchParticipation};
-use super::super::teams::TeamComponent::Team;
+use super::TournamentComponent::{Tournament, TournamentOrganizer, Match, MatchParticipation, PERMISSION_RECORD_MATCH, PERMISSION_MANAGE_TOURNAMENT};
+use dojo::model::{Model, ModelStorage, ModelValueStorage};
+use crate::teams::TeamComponent::Team;
 use super::TournamentEvents::{MatchResultRecorded};
 
 // Errors
@@ -11,10 +12,11 @@ const INVALID_MATCH: felt252 = 'Invalid match';
 const TEAM_NOT_IN_TOURNAMENT: felt252 = 'Team not in tournament';
 const MATCH_ALREADY_COMPLETED: felt252 = 'Match already completed';
 
-#[dojo::interface]
-trait ITournamentSystem {
+#[starknet::interface]
+trait ITournamentSystem<TContractState> {
     fn record_match_result(
-        ref world: IWorldDispatcher,
+        ref self: TContractState,
+        world: IWorldDispatcher,
         match_id: u32,
         tournament_id: u32,
         team1_id: u32,
@@ -24,7 +26,8 @@ trait ITournamentSystem {
     );
     
     fn create_match(
-        ref world: IWorldDispatcher,
+        ref self: TContractState,
+        world: IWorldDispatcher,
         tournament_id: u32,
         team1_id: u32,
         team2_id: u32,
@@ -32,7 +35,8 @@ trait ITournamentSystem {
     ) -> u32;
     
     fn add_tournament_organizer(
-        ref world: IWorldDispatcher,
+        ref self: TContractState,
+        world: IWorldDispatcher,
         tournament_id: u32,
         organizer: ContractAddress,
         role: felt252,
@@ -43,11 +47,14 @@ trait ITournamentSystem {
 #[dojo::contract]
 mod tournament_system {
     use super::*;
+    use dojo::model::{Model, ModelStorage, ModelValueStorage};
+    use dojo::event::{Event, EventStorage};
 
     #[abi(embed_v0)]
     impl TournamentSystemImpl of super::ITournamentSystem<ContractState> {
         fn record_match_result(
-            ref world: IWorldDispatcher,
+            ref self: ContractState,
+            world: IWorldDispatcher,
             match_id: u32,
             tournament_id: u32,
             team1_id: u32,
@@ -65,7 +72,7 @@ mod tournament_system {
             
             // Check authorization - caller must be organizer or referee with proper permissions
             let organizer: TournamentOrganizer = get!(world, (tournament_id, caller), TournamentOrganizer);
-            let has_permission = organizer.permissions & super::PERMISSION_RECORD_MATCH != 0;
+            let has_permission = organizer.permissions & PERMISSION_RECORD_MATCH != 0;
             assert(has_permission || tournament.organizer == caller, UNAUTHORIZED_CALLER);
             
             // Validate teams exist in tournament
@@ -108,7 +115,7 @@ mod tournament_system {
             set!(world, (team1, team2));
             
             // Emit event
-            emit!(world, MatchResultRecorded {
+            emit!(world, (MatchResultRecorded {
                 match_id,
                 tournament_id,
                 team1_id,
@@ -117,11 +124,12 @@ mod tournament_system {
                 team2_score,
                 recorded_by: caller,
                 recorded_at: current_time
-            });
+            }));
         }
         
         fn create_match(
-            ref world: IWorldDispatcher,
+            ref self: ContractState,
+            world: IWorldDispatcher,
             tournament_id: u32,
             team1_id: u32,
             team2_id: u32,
@@ -134,7 +142,7 @@ mod tournament_system {
             assert(tournament.tournament_id == tournament_id, INVALID_TOURNAMENT);
             
             let organizer: TournamentOrganizer = get!(world, (tournament_id, caller), TournamentOrganizer);
-            let has_permission = organizer.permissions & super::PERMISSION_MANAGE_TOURNAMENT != 0;
+            let has_permission = organizer.permissions & PERMISSION_MANAGE_TOURNAMENT != 0;
             assert(has_permission || tournament.organizer == caller, UNAUTHORIZED_CALLER);
             
             // Generate match ID (simple counter - in production use better ID generation)
@@ -158,7 +166,8 @@ mod tournament_system {
         }
         
         fn add_tournament_organizer(
-            ref world: IWorldDispatcher,
+            ref self: ContractState,
+            world: IWorldDispatcher,
             tournament_id: u32,
             organizer: ContractAddress,
             role: felt252,

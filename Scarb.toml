@@ -1,11 +1,10 @@
 [package]
-name = "backend-starknet-contracts"
+name = "backend_starknet_contracts"
 version = "0.1.0"
 edition = "2023_11"
 
 [dependencies]
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.7.0" }
-starknet = "2.6.4"
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.2.2" }
 
 [[target.dojo]]
 
@@ -16,5 +15,7 @@ world_address = "0x8069f9a92880a501dd47e6c119420c23aab1d889"
 [tool.dojo.env]
 rpc_url = "http://localhost:5050/"
 # rpc_url = "https://api.cartridge.gg/x/starknet/sepolia"
-# account_address = ""
-# private_key = ""
+
+[lib]
+name = "backend_starknet_contracts"
+path = "contracts/src/modules/main.cairo" 

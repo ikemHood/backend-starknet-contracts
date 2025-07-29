@@ -1,5 +1,3 @@
-// Punto de entrada del contrato
-
 mod teams {
     mod TeamComponent;
     mod TeamEvents;
@@ -24,4 +22,4 @@ mod players {
     mod PlayerSystem;
 }
 
-mod config;
+mod config; 
