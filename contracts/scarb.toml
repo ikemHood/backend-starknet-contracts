@@ -1,0 +1,21 @@
+[package]
+name = "contracts"
+edition = "2023_11"
+version = "0.3.0"
+
+[dependencies]
+starknet = "2.11.4"
+
+[dev-dependencies]
+snforge_std = "0.44.0"
+assert_macros = "2.11.4"
+
+[scripts]
+test = "snforge test"
+
+[[target.starknet-contract]]
+casm = true
+sierra = true
+
+[tool.scarb]
+allow-prebuilt-plugins = ["snforge_std"]

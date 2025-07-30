@@ -1,6 +1,6 @@
 use starknet::ContractAddress;
 
-#[derive(Model, Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde)]
 #[dojo::model]
 pub struct Team {
     #[key]
@@ -14,7 +14,7 @@ pub struct Team {
     pub draws: u32,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde)]
 #[dojo::model]
 pub struct TeamMember {
     #[key]

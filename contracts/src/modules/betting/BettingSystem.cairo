@@ -6,6 +6,11 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IBettingSystem<TContractState> {
+
+    fn get_active_bet_pools(
+        self: @TContractState,
+    ) -> Array<BetPool>; 
+
     fn create_bet_pool(
         ref self: TContractState,
         tournament_id: u64,
@@ -94,6 +99,7 @@ pub mod BettingSystem {
     #[derive(Drop, starknet::Event)]
     pub enum Event {
         BetPoolCreated: BetPoolCreated,
+        PoolClosed: PoolClosed,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -107,6 +113,13 @@ pub mod BettingSystem {
         pub closes_at: u64,
         #[key]
         pub creator: ContractAddress,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    pub struct PoolClosed {
+        #[key]
+        pub pool_id: u64,
+        pub closed_at: u64,
     }
 
     #[constructor]
@@ -195,6 +208,33 @@ pub mod BettingSystem {
                 );
 
             pool_id
+        }
+
+        fn get_active_bet_pools(
+            self: @ContractState,
+        ) -> Array<BetPool> {
+            let mut active_pools = ArrayTrait::new();
+            let active_ids_len = self.active_pool_ids.len();
+            
+            let mut i = 0;
+            loop {
+                if i >= active_ids_len {
+                    break;
+                }
+                
+                let pool_id = self.active_pool_ids.at(i).read();
+                let pool = self.pools.read(pool_id);
+                let status = self.pool_status.read(pool_id);
+                
+                // Filter by is_open == true as required
+                if pool.is_open && status.is_active {
+                    active_pools.append(pool);
+                }
+                
+                i += 1;
+            };
+            
+            active_pools
         }
 
         fn get_total_pools(self: @ContractState) -> u64 {

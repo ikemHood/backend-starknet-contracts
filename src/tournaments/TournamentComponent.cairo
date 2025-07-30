@@ -1,6 +1,6 @@
 use starknet::ContractAddress;
 
-#[derive(Model, Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde)]
 #[dojo::model]
 pub struct Tournament {
     #[key]
@@ -14,7 +14,7 @@ pub struct Tournament {
     pub current_teams: u32,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde)]
 #[dojo::model]
 pub struct TournamentOrganizer {
     #[key]
@@ -25,7 +25,7 @@ pub struct TournamentOrganizer {
     pub permissions: u32, // Bitfield for permissions
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde)]
 #[dojo::model]
 pub struct Match {
     #[key]
@@ -41,7 +41,7 @@ pub struct Match {
     pub recorded_by: ContractAddress,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde)]
 #[dojo::model]
 pub struct MatchParticipation {
     #[key]
@@ -53,6 +53,6 @@ pub struct MatchParticipation {
 }
 
 // Permission constants
-const PERMISSION_RECORD_MATCH: u32 = 1; // 0001
-const PERMISSION_MANAGE_TEAMS: u32 = 2; // 0010
-const PERMISSION_MANAGE_TOURNAMENT: u32 = 4; // 0100
+pub const PERMISSION_RECORD_MATCH: u32 = 1; // 0001
+pub const PERMISSION_MANAGE_TEAMS: u32 = 2; // 0010
+pub const PERMISSION_MANAGE_TOURNAMENT: u32 = 4; // 0100
