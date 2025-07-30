@@ -1,1 +1,1 @@
-# Gestión de torneos y puntos
+// # Gestión de torneos y puntos
