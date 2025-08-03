@@ -22,7 +22,15 @@ pub struct TournamentOrganizer {
     #[key]
     pub organizer: ContractAddress,
     pub role: felt252, // 'main_organizer', 'co_organizer', 'referee'
-    pub permissions: u32, // Bitfield for permissions
+    pub permissions: u32 // Bitfield for permissions
+}
+
+#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+pub struct Organizer {
+    #[key]
+    pub organizer: ContractAddress,
+    pub tournament_ids: Array<u32>,
 }
 
 #[derive(Model, Copy, Drop, Serde)]
