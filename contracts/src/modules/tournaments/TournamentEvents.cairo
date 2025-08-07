@@ -35,3 +35,14 @@ pub struct TeamJoinedTournament {
     pub team_id: u32,
     pub joined_at: u64,
 }
+
+#[derive(Drop, Serde)]
+#[dojo::event]
+pub struct PlayerJoinedTournament {
+    #[key]
+    pub tournament_id: u32,
+    #[key]
+    pub player_address: ContractAddress,
+    pub entry_fee_paid: u256,
+    pub joined_at: u64,
+}

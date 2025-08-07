@@ -12,6 +12,8 @@ pub struct Tournament {
     pub status: felt252, // 'upcoming', 'active', 'completed', 'cancelled'
     pub max_teams: u32,
     pub current_teams: u32,
+    pub entry_fee: u256,
+    pub fee_token: ContractAddress, // ERC20 token address for entry fee
 }
 
 #[derive(Model, Copy, Drop, Serde)]
